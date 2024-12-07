@@ -1,15 +1,16 @@
 from flask import Flask, request, render_template, jsonify
 import os
-
-import requests 
+from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import ConnectionError
 
 app = Flask(__name__)
 UPLOAD_FOLDER = '/app/data'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-ELASTICSEARCH_URL = "http://elasticsearch:9200"
-INDEX_NAME = "ecommerce_data"
+# Initialisation du client Elasticsearch
+es = Elasticsearch(['http://elasticsearch:9200'])
+INDEX_NAME = "csv_data"
 
 @app.route('/')
 def home_page():
@@ -37,20 +38,27 @@ def dashboard():
 def search():
     if request.method == 'POST':
         query = request.form.get('query', '')
-        # Perform search in Elasticsearch
-        search_url = f"{ELASTICSEARCH_URL}/{INDEX_NAME}/_search"
-        search_query = {
-            "query": {
-                "multi_match": {
-                    "query": query,
-                    "fields": ["Category", "Product_ID", "Payment_Method"]  # Adjust based on indexed fields
+        try:
+            # Recherche avec elasticsearch-py
+            search_body = {
+                "query": {
+                    "multi_match": {
+                        "query": query,
+                        "fields": ["Category", "Product_ID", "Payment_Method"]
+                    }
                 }
             }
-        }
-        response = requests.post(search_url, json=search_query)
-        results = response.json()
-        hits = results.get('hits', {}).get('hits', [])
-        return render_template('search.html', query=query, results=hits)
+            
+            # Exécution de la recherche
+            response = es.search(index=INDEX_NAME, body=search_body)
+            hits = response['hits']['hits']
+            return render_template('search.html', query=query, results=hits)
+            
+        except ConnectionError:
+            return render_template('search.html', query=query, results=[], error="Could not connect to Elasticsearch")
+        except Exception as e:
+            return render_template('search.html', query=query, results=[], error=str(e))
+            
     return render_template('search.html', query='', results=[])
 
 if __name__ == '__main__':
