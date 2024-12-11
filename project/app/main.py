@@ -8,13 +8,14 @@ UPLOAD_FOLDER = '/app/data'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Initialisation du client Elasticsearch
 es = Elasticsearch(['http://elasticsearch:9200'])
 INDEX_NAME = "csv_data"
 
 @app.route('/')
 def home_page():
     return render_template('home.html')
+
+import requests
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -28,7 +29,16 @@ def upload_file():
     if file:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(file_path)
-        return jsonify({'message': 'File uploaded successfully', 'file_path': file_path}), 200
+
+        # Send file data to Logstash HTTP input
+        with open(file_path, 'rb') as f:
+            response = requests.post("http://logstash:5044", files={"file": f})
+
+        if response.status_code == 200:
+            return jsonify({'message': 'File uploaded and processed successfully'}), 200
+        else:
+            return jsonify({'message': 'File uploaded but failed to process', 'error': response.text}), 500
+
 
 @app.route('/dashboard')
 def dashboard():

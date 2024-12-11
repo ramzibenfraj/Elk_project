@@ -236,39 +236,51 @@
             transform: translateY(-2px);
         }
 
-        .results {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            padding: 1rem;
-        }
-
-        .result {
+        .table-container {
+            overflow-x: auto;
+            margin: 2rem 0;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            border-left: 4px solid var(--secondary-color);
         }
 
-        .result:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin: 0;
         }
 
-        .result p {
-            margin: 0.5rem 0;
-            padding: 0.5rem;
-            border-bottom: 1px solid #f0f0f0;
+        .custom-table thead {
+            background: var(--primary-color);
+            color: white;
         }
 
-        .result p:last-child {
+        .custom-table th {
+            padding: 1.2rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .custom-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        .custom-table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+
+        .custom-table tbody tr:last-child td {
             border-bottom: none;
         }
 
-        .result strong {
-            color: var(--primary-color);
+        .table-icon {
+            color: var(--secondary-color);
+            margin-right: 0.5rem;
         }
 
         .alert {
@@ -318,19 +330,33 @@
             </div>
 
             {% if results %}
-            <div class="results">
-                {% for hit in results %}
-                <div class="result">
-                    <h4 class="mb-3 text-primary"><i class="fas fa-box mr-2"></i>Product Details</h4>
-                    <p><strong><i class="fas fa-tag mr-2"></i>Category:</strong> {{ hit._source.Category }}</p>
-                    <p><strong><i class="fas fa-barcode mr-2"></i>Product ID:</strong> {{ hit._source.Product_ID }}</p>
-                    <p><strong><i class="fas fa-rupee-sign mr-2"></i>Price:</strong> {{ hit._source["Price (Rs.)"] }}</p>
-                    <p><strong><i class="fas fa-percent mr-2"></i>Discount:</strong> {{ hit._source["Discount (%)"] }}%</p>
-                    <p><strong><i class="fas fa-money-bill-wave mr-2"></i>Final Price:</strong> {{ hit._source["Final_Price(Rs.)"] }}</p>
-                    <p><strong><i class="fas fa-credit-card mr-2"></i>Payment Method:</strong> {{ hit._source.Payment_Method }}</p>
-                    <p><strong><i class="fas fa-calendar-alt mr-2"></i>Purchase Date:</strong> {{ hit._source.Purchase_Date }}</p>
-                </div>
-                {% endfor %}
+            <div class="table-container">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-tag table-icon"></i>Category</th>
+                            <th><i class="fas fa-barcode table-icon"></i>Product ID</th>
+                            <th><i class="fas fa-rupee-sign table-icon"></i>Price</th>
+                            <th><i class="fas fa-percent table-icon"></i>Discount</th>
+                            <th><i class="fas fa-money-bill-wave table-icon"></i>Final Price</th>
+                            <th><i class="fas fa-credit-card table-icon"></i>Payment</th>
+                            <th><i class="fas fa-calendar-alt table-icon"></i>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hit in results %}
+                        <tr>
+                            <td>{{ hit._source.Category }}</td>
+                            <td>{{ hit._source.Product_ID }}</td>
+                            <td>{{ hit._source["Price (Rs.)"] }}</td>
+                            <td>{{ hit._source["Discount (%)"] }}%</td>
+                            <td>{{ hit._source["Final_Price(Rs.)"] }}</td>
+                            <td>{{ hit._source.Payment_Method }}</td>
+                            <td>{{ hit._source.Purchase_Date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
             {% elif query %}
             <div class="alert alert-info mt-4">

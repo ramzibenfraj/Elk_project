@@ -1,0 +1,4 @@
+User_ID,Product_ID,Category,Price (Rs.),Discount (%),Final_Price(Rs.),Payment_Method,Purchase_Date
+337c166f,f414122f-e,test3,36.53,15,31.05,Net Banking,12-11-2024
+d38a19bf,fde50f9c-5,test3,232.79,20,186.23,Net Banking,09-02-2024
+d7f5f0b0,0d96fc90-3,test3,317.02,25,237.76,Credit Card,01-09-2024
