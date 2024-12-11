@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, redirect, url_for  # Add the imports here
 import os
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ConnectionError
@@ -15,33 +15,33 @@ INDEX_NAME = "csv_data"
 def home_page():
     return render_template('home.html')
 
-import requests
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file part'}), 400
 
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
 
-    if file:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-        file.save(file_path)
+        if file:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            file.save(file_path)
 
-        # Send file data to Logstash HTTP input
-        with open(file_path, 'rb') as f:
-            response = requests.post("http://logstash:5044", files={"file": f})
+            # Log successful file upload
+            app.logger.debug(f"File {file.filename} saved successfully at {file_path}")
 
-        if response.status_code == 200:
-            return jsonify({'message': 'File uploaded and processed successfully'}), 200
-        else:
-            return jsonify({'message': 'File uploaded but failed to process', 'error': response.text}), 500
+            # Redirect to dashboard after upload
+            return render_template('upload.html')
 
+    except Exception as e:
+        app.logger.error(f"Error during file upload: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/dashboard')
 def dashboard():
+    app.logger.debug("Rendering dashboard page")
     return render_template('dashboard.html')
 
 @app.route('/search', methods=['GET', 'POST'])
@@ -49,7 +49,7 @@ def search():
     if request.method == 'POST':
         query = request.form.get('query', '')
         try:
-            # Recherche avec elasticsearch-py
+            # Elasticsearch query
             search_body = {
                 "query": {
                     "multi_match": {
@@ -59,7 +59,7 @@ def search():
                 }
             }
             
-            # Exécution de la recherche
+            # Execute search
             response = es.search(index=INDEX_NAME, body=search_body)
             hits = response['hits']['hits']
             return render_template('search.html', query=query, results=hits)

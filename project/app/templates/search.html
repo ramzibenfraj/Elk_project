@@ -262,6 +262,18 @@
             font-weight: 600;
             font-size: 0.9rem;
             text-transform: uppercase;
+            cursor: pointer; /* Ajout */
+            user-select: none; /* Ajout */
+        }
+
+        .sort-icon {
+            float: right;
+            color: rgba(255,255,255,0.5);
+            transition: all 0.3s ease;
+        }
+
+        .sort-icon.active {
+            color: white;
         }
 
         .custom-table td {
@@ -334,13 +346,34 @@
                 <table class="custom-table">
                     <thead>
                         <tr>
-                            <th><i class="fas fa-tag table-icon"></i>Category</th>
-                            <th><i class="fas fa-barcode table-icon"></i>Product ID</th>
-                            <th><i class="fas fa-rupee-sign table-icon"></i>Price</th>
-                            <th><i class="fas fa-percent table-icon"></i>Discount</th>
-                            <th><i class="fas fa-money-bill-wave table-icon"></i>Final Price</th>
-                            <th><i class="fas fa-credit-card table-icon"></i>Payment</th>
-                            <th><i class="fas fa-calendar-alt table-icon"></i>Date</th>
+                            <th onclick="sortTable(0)">
+                                <i class="fas fa-tag table-icon"></i>Category
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(1)">
+                                <i class="fas fa-barcode table-icon"></i>Product ID
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(2)">
+                                <i class="fas fa-rupee-sign table-icon"></i>Price
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(3)">
+                                <i class="fas fa-percent table-icon"></i>Discount
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(4)">
+                                <i class="fas fa-money-bill-wave table-icon"></i>Final Price
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(5)">
+                                <i class="fas fa-credit-card table-icon"></i>Payment
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(6)">
+                                <i class="fas fa-calendar-alt table-icon"></i>Date
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -404,5 +437,52 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        let sortOrders = Array(7).fill(true);
+
+        function sortTable(colIndex) {
+            const table = document.querySelector('.custom-table');
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            const headers = table.querySelectorAll('th');
+            
+            // Mise à jour des icônes
+            headers.forEach(header => {
+                header.querySelector('.sort-icon').className = 'fas fa-sort sort-icon';
+            });
+            
+            headers[colIndex].querySelector('.sort-icon').className = 
+                `fas fa-sort-${sortOrders[colIndex] ? 'down' : 'up'} sort-icon active`;
+
+            // Tri des lignes
+            rows.sort((a, b) => {
+                let aVal = a.cells[colIndex].textContent;
+                let bVal = b.cells[colIndex].textContent;
+
+                // Gestion des différents types de données
+                if (colIndex === 2 || colIndex === 3 || colIndex === 4) {
+                    // Pour les prix et pourcentages
+                    aVal = parseFloat(aVal.replace(/[^0-9.-]+/g, ''));
+                    bVal = parseFloat(bVal.replace(/[^0-9.-]+/g, ''));
+                } else if (colIndex === 6) {
+                    // Pour les dates
+                    aVal = new Date(aVal);
+                    bVal = new Date(bVal);
+                }
+
+                if (sortOrders[colIndex]) {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            // Réorganisation du tableau
+            const tbody = table.querySelector('tbody');
+            rows.forEach(row => tbody.appendChild(row));
+            
+            // Inversion de l'ordre pour le prochain clic
+            sortOrders[colIndex] = !sortOrders[colIndex];
+        }
+    </script>
 </body>
 </html>
